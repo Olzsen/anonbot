@@ -1,0 +1,227 @@
+package bot
+
+import (
+	"anonbot/internal/repository"
+	"anonbot/internal/service"
+	"fmt"
+	"html"
+	"strconv"
+	"strings"
+
+	tb "gopkg.in/telebot.v4"
+)
+
+const maxMessageLength = 1000
+
+func StartHandler(botUsername string) func(tb.Context) error {
+
+	return func(c tb.Context) error {
+
+		user := c.Sender()
+
+		repository.CreateUser(user.ID, user.Username)
+
+		link := fmt.Sprintf(
+			"https://t.me/%s?start=%d",
+			botUsername,
+			user.ID,
+		)
+
+		args := c.Args()
+
+		if len(args) == 0 {
+
+			msg := fmt.Sprintf(
+				"📨 <b>Получай анонимные сообщения</b>\n\n"+
+					"1️⃣ Поделись своей ссылкой\n"+
+					"2️⃣ Люди будут писать тебе анонимно\n"+
+					"3️⃣ Ты сможешь отвечать\n\n"+
+					"🔗 <code>%s</code>",
+				link,
+			)
+
+			btnShare := tb.InlineButton{
+				Text: "📤 Поделиться ссылкой",
+				URL:  link,
+			}
+
+			btnStats := tb.InlineButton{
+				Text:   "📊 Моя статистика",
+				Unique: "stats",
+			}
+
+			btnHelp := tb.InlineButton{
+				Text:   "ℹ️ Как это работает",
+				Unique: "help",
+			}
+
+			markup := &tb.ReplyMarkup{
+				InlineKeyboard: [][]tb.InlineButton{
+					{btnShare},
+					{btnStats, btnHelp},
+				},
+			}
+
+			return c.Send(msg, markup)
+		}
+
+		targetID, err := strconv.ParseInt(args[0], 10, 64)
+
+		if err != nil {
+			return c.Send("❌ Ошибка ссылки")
+		}
+
+		if targetID == user.ID {
+
+			return c.Send(
+				fmt.Sprintf(
+					"Это твоя ссылка 🙂\n\n🔗 <code>%s</code>",
+					link,
+				),
+			)
+		}
+
+		repository.SetSession(user.ID, targetID)
+
+		return c.Send(
+			"✉️ <b>Напиши сообщение</b>\n\nОно будет отправлено анонимно.",
+		)
+	}
+}
+
+func TextHandler(c tb.Context) error {
+
+	user := c.Sender()
+
+	text := c.Text()
+
+	if len(text) > maxMessageLength {
+		return c.Send("❌ Сообщение слишком длинное (макс 1000 символов)")
+	}
+
+	replyID, replying := repository.GetReply(user.ID)
+
+	if replying {
+
+		if replyID == user.ID {
+			return c.Send("❌ Нельзя ответить самому себе")
+		}
+
+		safe := html.EscapeString(text)
+
+		msg := fmt.Sprintf(
+			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
+			safe,
+		)
+
+		service.Queue <- service.Job{
+			UserID: replyID,
+			Text:   msg,
+		}
+
+		repository.DeleteReply(user.ID)
+
+		return c.Send("✅ Ответ отправлен")
+	}
+
+	targetID, ok := repository.GetSession(user.ID)
+
+	if !ok {
+		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+	}
+
+	allow, wait := service.Allow(user.ID)
+
+	if !allow {
+		return c.Send(
+			fmt.Sprintf(
+				"⏳ Подождите %d секунд перед следующим сообщением",
+				wait,
+			),
+		)
+	}
+
+	safe := html.EscapeString(text)
+
+	messageID := repository.SaveMessage(user.ID, targetID, safe)
+
+	msg := fmt.Sprintf(
+		"📩 <b>Анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
+		safe,
+	)
+
+	btn := tb.InlineButton{
+		Text: "💬 Ответить",
+		Data: fmt.Sprintf("reply:%d", messageID),
+	}
+
+	markup := &tb.ReplyMarkup{}
+
+	markup.InlineKeyboard = [][]tb.InlineButton{
+		{btn},
+	}
+
+	service.Queue <- service.Job{
+		UserID: targetID,
+		Text:   msg,
+	}
+
+	repository.DeleteSession(user.ID)
+
+	return c.Send("✅ Сообщение отправлено анонимно")
+}
+
+func ReplyButton(c tb.Context) error {
+
+	data := c.Callback().Data
+
+	if !strings.HasPrefix(data, "reply:") {
+		return nil
+	}
+
+	idStr := strings.TrimPrefix(data, "reply:")
+
+	messageID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return nil
+	}
+
+	senderID, ok := repository.GetMessageSender(messageID)
+
+	if !ok {
+		c.Respond()
+		return c.Send("❌ Сообщение не найдено")
+	}
+
+	repository.SetReply(c.Sender().ID, senderID)
+
+	c.Respond()
+
+	return c.Send("✏️ Напиши ответ на сообщение")
+}
+
+func StatsHandler(c tb.Context) error {
+
+	user := c.Sender()
+
+	count := repository.CountMessages(user.ID)
+
+	msg := fmt.Sprintf(
+		"📊 <b>Твоя статистика</b>\n\n"+
+			"Получено сообщений: <b>%d</b>",
+		count,
+	)
+
+	return c.Send(msg)
+}
+
+func HelpHandler(c tb.Context) error {
+
+	msg := "ℹ️ <b>Как работает бот</b>\n\n" +
+		"1. Поделись своей ссылкой\n" +
+		"2. Люди будут писать тебе\n" +
+		"3. Ты получишь анонимные сообщения\n" +
+		"4. Можно отвечать прямо из бота"
+
+	return c.Send(msg)
+}

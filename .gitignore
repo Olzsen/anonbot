@@ -1,0 +1,18 @@
+# database
+*.db
+*.db-shm
+*.db-wal
+
+# env
+.env
+
+# binaries
+anonbot
+*.exe
+
+# logs
+*.log
+
+# IDE
+.vscode/
+.idea/
