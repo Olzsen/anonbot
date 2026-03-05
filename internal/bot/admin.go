@@ -17,12 +17,21 @@ func AdminHandler(c tb.Context) error {
 	}
 
 	users := repository.CountUsers()
+	msgs := repository.CountMessages()
+	today := repository.CountMessagesToday()
+	active := repository.CountActiveToday()
 
 	msg := fmt.Sprintf(
 		"🛠 <b>Admin panel</b>\n\n"+
-			"👤 Users: <b>%d</b>\n\n"+
-			"/setad - изменить рекламу",
+			"👤 Users: <b>%d</b>\n"+
+			"📨 Messages: <b>%d</b>\n"+
+			"📅 Messages today: <b>%d</b>\n"+
+			"🔥 Active users today: <b>%d</b>\n\n"+
+			"/setad — изменить рекламу",
 		users,
+		msgs,
+		today,
+		active,
 	)
 
 	return c.Send(msg)

@@ -12,22 +12,17 @@ import (
 	tb "gopkg.in/telebot.v4"
 )
 
-var OwnerID int64
-
 func main() {
 
 	token := os.Getenv("BOT_TOKEN")
+	owner := os.Getenv("OWNER_ID")
+
 	if token == "" {
 		log.Fatal("BOT_TOKEN not set")
 	}
 
-	owner := os.Getenv("OWNER_ID")
-	if owner != "" {
-		id, _ := strconv.ParseInt(owner, 10, 64)
-		OwnerID = id
-	}
-
-	bot.OwnerID = OwnerID
+	ownerID, _ := strconv.ParseInt(owner, 10, 64)
+	bot.OwnerID = ownerID
 
 	database.Init()
 
@@ -36,7 +31,6 @@ func main() {
 		Poller: &tb.LongPoller{
 			Timeout: 10 * time.Second,
 		},
-		ParseMode: tb.ModeHTML,
 	}
 
 	b, err := tb.NewBot(pref)
@@ -44,32 +38,27 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Bot initialized")
+	service.StartSender(b)
 
-	service.StartWorker(b)
-	service.StartCleanup()
+	btnStats := tb.InlineButton{
+		Text:   "📊 Моя статистика",
+		Unique: "stats",
+	}
 
-	username := b.Me.Username
+	btnHelp := tb.InlineButton{
+		Text:   "ℹ️ Как это работает",
+		Unique: "help",
+	}
 
-	b.Handle("/start", bot.StartHandler(username))
-	b.Handle("/stats", bot.StatsHandler)
-
+	b.Handle("/start", bot.StartHandler(b.Me.Username))
 	b.Handle("/admin", bot.AdminHandler)
 	b.Handle("/setad", bot.SetAdHandler)
 
-	b.Handle(
-		tb.OnText,
-		bot.AntiSpamMiddleware(
-			bot.RateLimitMiddleware(
-				bot.TextHandler,
-			),
-		),
-	)
+	b.Handle(&btnStats, bot.StatsHandler)
+	b.Handle(&btnHelp, bot.HelpHandler)
 
+	b.Handle(tb.OnText, bot.TextHandler)
 	b.Handle(tb.OnCallback, bot.ReplyButton)
-
-	b.Handle(&tb.InlineButton{Unique: "help"}, bot.HelpHandler)
-	b.Handle(&tb.InlineButton{Unique: "stats"}, bot.StatsHandler)
 
 	log.Println("Bot started")
 

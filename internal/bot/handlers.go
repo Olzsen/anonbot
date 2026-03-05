@@ -191,12 +191,18 @@ func StatsHandler(c tb.Context) error {
 
 	user := c.Sender()
 
-	count := repository.CountMessages(user.ID)
+	received := repository.CountReceived(user.ID)
+	sent := repository.CountSent(user.ID)
+	today := repository.CountToday(user.ID)
 
 	msg := fmt.Sprintf(
 		"📊 <b>Твоя статистика</b>\n\n"+
-			"Получено сообщений: <b>%d</b>\n\n%s",
-		count,
+			"📨 Получено сообщений: <b>%d</b>\n"+
+			"📤 Отправлено сообщений: <b>%d</b>\n"+
+			"📅 Сегодня получено: <b>%d</b>\n\n%s",
+		received,
+		sent,
+		today,
 		add,
 	)
 
