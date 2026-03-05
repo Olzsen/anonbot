@@ -21,16 +21,23 @@ func StartHandler(botUsername string) func(tb.Context) error {
 
 		user := c.Sender()
 
-		ref := service.GenerateRef()
+		ref := repository.GetRefCode(user.ID)
 
-		repository.CreateUser(user.ID, user.Username, ref)
+		if ref == "" {
 
-		userRef := repository.GetRefCode(user.ID)
+			ref = service.GenerateRef()
+
+			repository.CreateUser(
+				user.ID,
+				user.Username,
+				ref,
+			)
+		}
 
 		link := fmt.Sprintf(
 			"https://t.me/%s?start=%s",
 			botUsername,
-			userRef,
+			ref,
 		)
 
 		args := c.Args()

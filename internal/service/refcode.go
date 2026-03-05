@@ -1,21 +1,24 @@
 package service
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"math/big"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 func GenerateRef() string {
 
-	rand.Seed(time.Now().UnixNano())
+	length := 8
 
-	b := make([]byte, 8)
+	result := make([]byte, length)
 
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+	for i := range result {
+
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		result[i] = letters[n.Int64()]
+
 	}
 
-	return string(b)
+	return string(result)
 }
