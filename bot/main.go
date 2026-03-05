@@ -27,6 +27,7 @@ func main() {
 
 	pref := tb.Settings{
 		Token: token,
+		ParseMode: tb.ModeHTML,
 		Poller: &tb.LongPoller{
 			Timeout: 10 * time.Second,
 		},

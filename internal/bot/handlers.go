@@ -21,12 +21,16 @@ func StartHandler(botUsername string) func(tb.Context) error {
 
 		user := c.Sender()
 
-		repository.CreateUser(user.ID, user.Username)
+		ref := service.GenerateRef()
+
+		repository.CreateUser(user.ID, user.Username, ref)
+
+		userRef := repository.GetRefCode(user.ID)
 
 		link := fmt.Sprintf(
-			"https://t.me/%s?start=%d",
+			"https://t.me/%s?start=%s",
 			botUsername,
-			user.ID,
+			userRef,
 		)
 
 		args := c.Args()
@@ -68,10 +72,10 @@ func StartHandler(botUsername string) func(tb.Context) error {
 			return c.Send(msg, markup)
 		}
 
-		targetID, err := strconv.ParseInt(args[0], 10, 64)
+		targetID := repository.GetUserByRef(args[0])
 
-		if err != nil {
-			return c.Send("❌ Ошибка ссылки")
+		if targetID == 0 {
+			return c.Send("❌ Неверная ссылка")
 		}
 
 		if targetID == user.ID {
