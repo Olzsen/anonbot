@@ -3,6 +3,7 @@ package main
 import (
 	"anonbot/internal/bot"
 	"anonbot/internal/database"
+	"anonbot/internal/service"
 	"log"
 	"os"
 	"strconv"
@@ -26,7 +27,7 @@ func main() {
 	database.Init()
 
 	pref := tb.Settings{
-		Token: token,
+		Token:     token,
 		ParseMode: tb.ModeHTML,
 		Poller: &tb.LongPoller{
 			Timeout: 10 * time.Second,
@@ -57,6 +58,10 @@ func main() {
 
 	b.Handle(tb.OnText, bot.TextHandler)
 	b.Handle(tb.OnCallback, bot.ReplyButton)
+
+	// 🔥 запуск очереди отправки
+	service.Queue = make(chan service.Job, 100)
+	go service.StartSender(b)
 
 	log.Println("Bot started")
 
