@@ -3,7 +3,6 @@ package main
 import (
 	"anonbot/internal/bot"
 	"anonbot/internal/database"
-	"anonbot/internal/service"
 	"log"
 	"os"
 	"strconv"
@@ -37,8 +36,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	service.StartSender(b)
 
 	btnStats := tb.InlineButton{
 		Text:   "📊 Моя статистика",
