@@ -11,6 +11,8 @@ import (
 	tb "gopkg.in/telebot.v4"
 )
 
+var add string = "<a href='https://t.me/rolivikstarsbot?start=ref_1611018178'>Звезды по курсу 1⭐ - 1.42₽</a>"
+
 const maxMessageLength = 1000
 
 func StartHandler(botUsername string) func(tb.Context) error {
@@ -75,8 +77,9 @@ func StartHandler(botUsername string) func(tb.Context) error {
 
 			return c.Send(
 				fmt.Sprintf(
-					"Это твоя ссылка 🙂\n\n🔗 <code>%s</code>",
+					"Это твоя ссылка 🙂\n\n🔗 <code>%s</code>\n%s",
 					link,
+					add,
 				),
 			)
 		}
@@ -84,7 +87,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 		repository.SetSession(user.ID, targetID)
 
 		return c.Send(
-			"✉️ <b>Напиши сообщение</b>\n\nОно будет отправлено анонимно.",
+			fmt.Sprintf("✉️ <b>Напиши сообщение</b>\n\nОно будет отправлено анонимно.\n%s", add),
 		)
 	}
 }
@@ -110,8 +113,9 @@ func TextHandler(c tb.Context) error {
 		safe := html.EscapeString(text)
 
 		msg := fmt.Sprintf(
-			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
+			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n%s",
 			safe,
+			add,
 		)
 
 		service.Queue <- service.Job{
@@ -146,8 +150,9 @@ func TextHandler(c tb.Context) error {
 	messageID := repository.SaveMessage(user.ID, targetID, safe)
 
 	msg := fmt.Sprintf(
-		"📩 <b>Анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
+		"📩 <b>Анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n%s",
 		safe,
+		add,
 	)
 
 	btn := tb.InlineButton{
