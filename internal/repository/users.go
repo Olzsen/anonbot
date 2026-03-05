@@ -2,14 +2,21 @@ package repository
 
 import "anonbot/internal/database"
 
-func CreateUser(id int64, username string, ref string) {
+func CreateUser(id int64, username string) {
 
 	_, _ = database.DB.Exec(
-		`INSERT OR IGNORE INTO users(id, username, ref_code)
-		 VALUES(?,?,?)`,
+		`INSERT OR IGNORE INTO users(id, username) VALUES(?,?)`,
 		id,
 		username,
+	)
+}
+
+func SetRefCode(userID int64, ref string) {
+
+	_, _ = database.DB.Exec(
+		`UPDATE users SET ref_code=? WHERE id=?`,
 		ref,
+		userID,
 	)
 }
 
@@ -35,15 +42,4 @@ func GetUserByRef(ref string) int64 {
 	).Scan(&id)
 
 	return id
-}
-
-func CountUsers() int {
-
-	var count int
-
-	database.DB.QueryRow(
-		`SELECT COUNT(*) FROM users`,
-	).Scan(&count)
-
-	return count
 }

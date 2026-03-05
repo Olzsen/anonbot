@@ -21,17 +21,15 @@ func StartHandler(botUsername string) func(tb.Context) error {
 
 		user := c.Sender()
 
+		repository.CreateUser(user.ID, user.Username)
+
 		ref := repository.GetRefCode(user.ID)
 
 		if ref == "" {
 
 			ref = service.GenerateRef()
 
-			repository.CreateUser(
-				user.ID,
-				user.Username,
-				ref,
-			)
+			repository.SetRefCode(user.ID, ref)
 		}
 
 		link := fmt.Sprintf(

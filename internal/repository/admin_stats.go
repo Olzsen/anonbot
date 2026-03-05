@@ -36,3 +36,14 @@ func CountActiveToday() int {
 
 	return count
 }
+
+func CountUsers() int {
+
+	var count int
+
+	database.DB.QueryRow(
+		`SELECT COUNT(*) FROM users`,
+	).Scan(&count)
+
+	return count
+}
