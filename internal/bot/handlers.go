@@ -38,8 +38,10 @@ func StartHandler(botUsername string) func(tb.Context) error {
 					"1️⃣ Поделись своей ссылкой\n"+
 					"2️⃣ Люди будут писать тебе анонимно\n"+
 					"3️⃣ Ты сможешь отвечать\n\n"+
-					"🔗 <code>%s</code>",
+					"🔗 <code>%s</code>"+
+					"\n\n%s",
 				link,
+				add,
 			)
 
 			btnShare := tb.InlineButton{
@@ -77,7 +79,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 
 			return c.Send(
 				fmt.Sprintf(
-					"Это твоя ссылка 🙂\n\n🔗 <code>%s</code>\n%s",
+					"Это твоя ссылка 🙂\n\n🔗 <code>%s</code>\n\n%s",
 					link,
 					add,
 				),
@@ -87,7 +89,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 		repository.SetSession(user.ID, targetID)
 
 		return c.Send(
-			fmt.Sprintf("✉️ <b>Напиши сообщение</b>\n\nОно будет отправлено анонимно.\n%s", add),
+			fmt.Sprintf("✉️ <b>Напиши сообщение</b>\n\nОно будет отправлено анонимно.\n\n%s", add),
 		)
 	}
 }
@@ -113,7 +115,7 @@ func TextHandler(c tb.Context) error {
 		safe := html.EscapeString(text)
 
 		msg := fmt.Sprintf(
-			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n%s",
+			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n\n%s",
 			safe,
 			add,
 		)
@@ -150,7 +152,7 @@ func TextHandler(c tb.Context) error {
 	messageID := repository.SaveMessage(user.ID, targetID, safe)
 
 	msg := fmt.Sprintf(
-		"📩 <b>Анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n%s",
+		"📩 <b>Анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n\n%s",
 		safe,
 		add,
 	)
@@ -213,8 +215,10 @@ func StatsHandler(c tb.Context) error {
 
 	msg := fmt.Sprintf(
 		"📊 <b>Твоя статистика</b>\n\n"+
-			"Получено сообщений: <b>%d</b>",
+			"Получено сообщений: <b>%d</b>"+
+			"\n\n%s",
 		count,
+		add,
 	)
 
 	return c.Send(msg)
@@ -228,5 +232,5 @@ func HelpHandler(c tb.Context) error {
 		"3. Ты получишь анонимные сообщения\n" +
 		"4. Можно отвечать прямо из бота"
 
-	return c.Send(msg)
+	return c.Send(fmt.Sprintf("%s\n\n%s", msg, add))
 }
