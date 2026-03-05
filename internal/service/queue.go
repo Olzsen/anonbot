@@ -1,12 +1,16 @@
 package service
 
 import (
+	"log"
+	"time"
+
 	tb "gopkg.in/telebot.v4"
 )
 
 type Job struct {
 	UserID int64
 	Text   string
+	Markup *tb.ReplyMarkup
 }
 
 var Queue = make(chan Job, 1000)
@@ -17,9 +21,42 @@ func StartWorker(bot *tb.Bot) {
 
 		for job := range Queue {
 
-			bot.Send(&tb.User{ID: job.UserID}, job.Text)
+			send(bot, job)
 
+			// защита от rate-limit Telegram
+			time.Sleep(50 * time.Millisecond)
 		}
 
 	}()
+}
+
+func send(bot *tb.Bot, job Job) {
+
+	user := &tb.User{
+		ID: job.UserID,
+	}
+
+	var err error
+
+	if job.Markup != nil {
+
+		_, err = bot.Send(user, job.Text, job.Markup)
+
+	} else {
+
+		_, err = bot.Send(user, job.Text)
+
+	}
+
+	if err != nil {
+
+		log.Println("send error:", err)
+
+		// retry через 2 секунды
+		go func() {
+			time.Sleep(2 * time.Second)
+			Queue <- job
+		}()
+
+	}
 }

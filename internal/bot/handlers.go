@@ -38,8 +38,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 					"1️⃣ Поделись своей ссылкой\n"+
 					"2️⃣ Люди будут писать тебе анонимно\n"+
 					"3️⃣ Ты сможешь отвечать\n\n"+
-					"🔗 <code>%s</code>"+
-					"\n\n%s",
+					"🔗 <code>%s</code>\n\n%s",
 				link,
 				add,
 			)
@@ -97,7 +96,6 @@ func StartHandler(botUsername string) func(tb.Context) error {
 func TextHandler(c tb.Context) error {
 
 	user := c.Sender()
-
 	text := c.Text()
 
 	if len(text) > maxMessageLength {
@@ -162,15 +160,16 @@ func TextHandler(c tb.Context) error {
 		Data: fmt.Sprintf("reply:%d", messageID),
 	}
 
-	markup := &tb.ReplyMarkup{}
-
-	markup.InlineKeyboard = [][]tb.InlineButton{
-		{btn},
+	markup := &tb.ReplyMarkup{
+		InlineKeyboard: [][]tb.InlineButton{
+			{btn},
+		},
 	}
 
 	service.Queue <- service.Job{
 		UserID: targetID,
 		Text:   msg,
+		Markup: markup,
 	}
 
 	repository.DeleteSession(user.ID)
@@ -187,8 +186,8 @@ func ReplyButton(c tb.Context) error {
 	}
 
 	idStr := strings.TrimPrefix(data, "reply:")
-
 	messageID, err := strconv.ParseInt(idStr, 10, 64)
+
 	if err != nil {
 		return nil
 	}
@@ -215,8 +214,7 @@ func StatsHandler(c tb.Context) error {
 
 	msg := fmt.Sprintf(
 		"📊 <b>Твоя статистика</b>\n\n"+
-			"Получено сообщений: <b>%d</b>"+
-			"\n\n%s",
+			"Получено сообщений: <b>%d</b>\n\n%s",
 		count,
 		add,
 	)

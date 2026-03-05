@@ -6,20 +6,30 @@ import (
 	"anonbot/internal/service"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	tb "gopkg.in/telebot.v4"
 )
 
+var OwnerID int64
+
 func main() {
 
-	database.Init()
-
 	token := os.Getenv("BOT_TOKEN")
-
 	if token == "" {
 		log.Fatal("BOT_TOKEN not set")
 	}
+
+	owner := os.Getenv("OWNER_ID")
+	if owner != "" {
+		id, _ := strconv.ParseInt(owner, 10, 64)
+		OwnerID = id
+	}
+
+	bot.OwnerID = OwnerID
+
+	database.Init()
 
 	pref := tb.Settings{
 		Token: token,
@@ -37,13 +47,15 @@ func main() {
 	log.Println("Bot initialized")
 
 	service.StartWorker(b)
-
 	service.StartCleanup()
 
-	botUsername := b.Me.Username
+	username := b.Me.Username
 
-	b.Handle("/start", bot.StartHandler(botUsername))
+	b.Handle("/start", bot.StartHandler(username))
 	b.Handle("/stats", bot.StatsHandler)
+
+	b.Handle("/admin", bot.AdminHandler)
+	b.Handle("/setad", bot.SetAdHandler)
 
 	b.Handle(
 		tb.OnText,
