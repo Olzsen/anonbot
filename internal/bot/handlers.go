@@ -106,10 +106,6 @@ func TextHandler(c tb.Context) error {
 
 	if replying {
 
-		if replyID == user.ID {
-			return c.Send("❌ Нельзя ответить самому себе")
-		}
-
 		safe := html.EscapeString(text)
 
 		msg := fmt.Sprintf(
@@ -132,17 +128,6 @@ func TextHandler(c tb.Context) error {
 
 	if !ok {
 		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
-	}
-
-	allow, wait := service.Allow(user.ID)
-
-	if !allow {
-		return c.Send(
-			fmt.Sprintf(
-				"⏳ Подождите %d секунд перед следующим сообщением",
-				wait,
-			),
-		)
 	}
 
 	safe := html.EscapeString(text)
@@ -186,11 +171,7 @@ func ReplyButton(c tb.Context) error {
 	}
 
 	idStr := strings.TrimPrefix(data, "reply:")
-	messageID, err := strconv.ParseInt(idStr, 10, 64)
-
-	if err != nil {
-		return nil
-	}
+	messageID, _ := strconv.ParseInt(idStr, 10, 64)
 
 	senderID, ok := repository.GetMessageSender(messageID)
 

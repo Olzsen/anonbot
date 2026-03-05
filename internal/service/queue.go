@@ -23,7 +23,6 @@ func StartWorker(bot *tb.Bot) {
 
 			send(bot, job)
 
-			// защита от rate-limit Telegram
 			time.Sleep(50 * time.Millisecond)
 		}
 
@@ -52,7 +51,6 @@ func send(bot *tb.Bot, job Job) {
 
 		log.Println("send error:", err)
 
-		// retry через 2 секунды
 		go func() {
 			time.Sleep(2 * time.Second)
 			Queue <- job
