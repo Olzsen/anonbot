@@ -57,9 +57,12 @@ func main() {
 	b.Handle(&btnHelp, bot.HelpHandler)
 
 	b.Handle(tb.OnText, bot.TextHandler)
+	b.Handle(tb.OnPhoto, bot.PhotoHandler)
+	b.Handle(tb.OnVideo, bot.VideoHandler)
+	b.Handle(tb.OnVoice, bot.VoiceHandler)
+
 	b.Handle(tb.OnCallback, bot.ReplyButton)
 
-	// 🔥 запуск очереди отправки
 	service.Queue = make(chan service.Job, 100)
 	go service.StartSender(b)
 

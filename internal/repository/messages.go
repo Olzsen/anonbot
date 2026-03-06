@@ -76,3 +76,19 @@ func GetMessageSender(messageID int64) (int64, bool) {
 
 	return sender, true
 }
+
+func SaveMediaMessage(from int64, to int64, mediaType string, mediaID string) int64 {
+
+	result, _ := database.DB.Exec(
+		`INSERT INTO messages(from_user,to_user,media_type,media_id,created_at)
+		 VALUES(?,?,?,?,datetime('now'))`,
+		from,
+		to,
+		mediaType,
+		mediaID,
+	)
+
+	id, _ := result.LastInsertId()
+
+	return id
+}

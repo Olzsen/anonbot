@@ -228,3 +228,123 @@ func HelpHandler(c tb.Context) error {
 
 	return c.Send(fmt.Sprintf("%s\n\n%s", msg, add))
 }
+
+func PhotoHandler(c tb.Context) error {
+
+	user := c.Sender()
+
+	targetID, ok := repository.GetSession(user.ID)
+	if !ok {
+		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+	}
+
+	photo := c.Message().Photo
+
+	messageID := repository.SaveMediaMessage(
+		user.ID,
+		targetID,
+		"photo",
+		photo.FileID,
+	)
+
+	btn := tb.InlineButton{
+		Text: "💬 Ответить",
+		Data: fmt.Sprintf("reply:%d", messageID),
+	}
+
+	markup := &tb.ReplyMarkup{
+		InlineKeyboard: [][]tb.InlineButton{
+			{btn},
+		},
+	}
+
+	service.Queue <- service.Job{
+		UserID: targetID,
+		Photo:  photo.FileID,
+		Markup: markup,
+	}
+
+	repository.DeleteSession(user.ID)
+
+	return c.Send("✅ Фото отправлено анонимно")
+}
+
+func VideoHandler(c tb.Context) error {
+
+	user := c.Sender()
+
+	targetID, ok := repository.GetSession(user.ID)
+	if !ok {
+		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+	}
+
+	video := c.Message().Video
+
+	messageID := repository.SaveMediaMessage(
+		user.ID,
+		targetID,
+		"video",
+		video.FileID,
+	)
+
+	btn := tb.InlineButton{
+		Text: "💬 Ответить",
+		Data: fmt.Sprintf("reply:%d", messageID),
+	}
+
+	markup := &tb.ReplyMarkup{
+		InlineKeyboard: [][]tb.InlineButton{
+			{btn},
+		},
+	}
+
+	service.Queue <- service.Job{
+		UserID: targetID,
+		Video:  video.FileID,
+		Markup: markup,
+	}
+
+	repository.DeleteSession(user.ID)
+
+	return c.Send("✅ Видео отправлено анонимно")
+}
+
+func VoiceHandler(c tb.Context) error {
+
+	user := c.Sender()
+
+	targetID, ok := repository.GetSession(user.ID)
+	if !ok {
+		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+	}
+
+	voice := c.Message().Voice
+
+	messageID := repository.SaveMediaMessage(
+		user.ID,
+		targetID,
+		"voice",
+		voice.FileID,
+	)
+
+	btn := tb.InlineButton{
+		Text: "💬 Ответить",
+		Data: fmt.Sprintf("reply:%d", messageID),
+	}
+
+	markup := &tb.ReplyMarkup{
+		InlineKeyboard: [][]tb.InlineButton{
+			{btn},
+		},
+	}
+
+	service.Queue <- service.Job{
+		UserID: targetID,
+		Voice:  voice.FileID,
+		Markup: markup,
+	}
+
+	repository.DeleteSession(user.ID)
+
+	return c.Send("✅ Голосовое отправлено анонимно")
+}

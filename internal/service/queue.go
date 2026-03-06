@@ -9,11 +9,17 @@ import (
 
 type Job struct {
 	UserID int64
-	Text   string
-	Markup *tb.ReplyMarkup
+
+	Text string
+
+	Photo string
+	Video string
+	Voice string
+
+	Markup interface{}
 }
 
-var Queue = make(chan Job, 1000)
+var Queue chan Job
 
 func StartWorker(bot *tb.Bot) {
 
