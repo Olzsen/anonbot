@@ -63,6 +63,8 @@ func main() {
 
 	b.Handle(tb.OnCallback, bot.ReplyButton)
 
+	service.StartCleanup()
+
 	service.Queue = make(chan service.Job, 100)
 	go service.StartSender(b)
 

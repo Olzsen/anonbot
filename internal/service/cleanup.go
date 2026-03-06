@@ -12,21 +12,16 @@ func StartCleanup() {
 
 		for {
 
-			time.Sleep(24 * time.Hour)
-
-			query := `
-			DELETE FROM messages
-			WHERE created_at < datetime('now', '-7 days')
-			`
-
-			_, err := database.DB.Exec(query)
+			_, err := database.DB.Exec(
+				`DELETE FROM messages
+				 WHERE created_at < datetime('now','-30 day')`,
+			)
 
 			if err != nil {
 				log.Println("cleanup error:", err)
-			} else {
-				log.Println("old messages deleted")
 			}
 
+			time.Sleep(12 * time.Hour)
 		}
 
 	}()

@@ -41,3 +41,4 @@ func Allow(userID int64) (bool, int) {
 
 	return true, 0
 }
+
