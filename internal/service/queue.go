@@ -4,7 +4,8 @@ import tb "gopkg.in/telebot.v4"
 
 type Job struct {
 	UserID int64
-	Text   string
+
+	Text string
 
 	Photo string
 	Video string
