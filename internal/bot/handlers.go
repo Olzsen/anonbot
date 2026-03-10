@@ -188,7 +188,10 @@ func PhotoHandler(c tb.Context) error {
 		service.Queue <- service.Job{
 			UserID: replyID,
 			Photo:  photo.FileID,
-			Text:   caption,
+			Text: fmt.Sprintf(
+				"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
+				caption,
+			),
 		}
 
 		repository.DeleteReply(user.ID)
@@ -243,6 +246,8 @@ func VideoHandler(c tb.Context) error {
 	user := c.Sender()
 	video := c.Message().Video
 
+	caption := html.EscapeString(video.Caption)
+
 	replyID, replying := repository.GetReply(user.ID)
 
 	if replying {
@@ -250,6 +255,7 @@ func VideoHandler(c tb.Context) error {
 		service.Queue <- service.Job{
 			UserID: replyID,
 			Video:  video.FileID,
+			Text:   caption,
 		}
 
 		repository.DeleteReply(user.ID)
@@ -284,6 +290,7 @@ func VideoHandler(c tb.Context) error {
 	service.Queue <- service.Job{
 		UserID: targetID,
 		Video:  video.FileID,
+		Text:   caption,
 		Markup: markup,
 	}
 
@@ -365,9 +372,7 @@ func ReplyButton(c tb.Context) error {
 	senderID, ok := repository.GetMessageSender(messageID)
 
 	if !ok {
-
 		c.Respond()
-
 		return c.Send("❌ Сообщение не найдено")
 	}
 
