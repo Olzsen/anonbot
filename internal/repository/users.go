@@ -32,14 +32,21 @@ func GetRefCode(userID int64) string {
 	return code
 }
 
-func GetUserByRef(ref string) int64 {
+func GetUserByRef(code string) int64 {
+
+	row := database.DB.QueryRow(`
+	SELECT telegram_id
+	FROM users
+	WHERE ref_code = ?
+	`, code)
 
 	var id int64
 
-	database.DB.QueryRow(
-		`SELECT id FROM users WHERE ref_code=?`,
-		ref,
-	).Scan(&id)
+	err := row.Scan(&id)
+
+	if err != nil {
+		return 0
+	}
 
 	return id
 }
