@@ -5,7 +5,8 @@ import "anonbot/internal/database"
 func CreateUser(id int64, username string) {
 
 	_, _ = database.DB.Exec(
-		`INSERT OR IGNORE INTO users(id, username) VALUES(?,?)`,
+		`INSERT OR IGNORE INTO users(id, telegram_id, username) VALUES(?,?,?)`,
+		id,
 		id,
 		username,
 	)

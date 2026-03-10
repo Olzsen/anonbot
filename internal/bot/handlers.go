@@ -55,7 +55,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 			share := fmt.Sprintf(
 				"https://t.me/share/url?url=%s&text=%s",
 				link,
-				"Напиши мне анонимное сообщение 👇",
+				"\nНапиши мне анонимное сообщение 👆",
 			)
 
 			btnShare := tb.InlineButton{
