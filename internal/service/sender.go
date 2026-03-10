@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"time"
 
 	tb "gopkg.in/telebot.v4"
@@ -21,9 +22,16 @@ func worker(bot *tb.Bot) {
 		user := &tb.User{ID: job.UserID}
 
 		if job.Photo != "" {
-			bot.Send(user, &tb.Photo{
-				File: tb.File{FileID: job.Photo},
+
+			_, err := bot.Send(user, &tb.Photo{
+				File:    tb.File{FileID: job.Photo},
+				Caption: "📩 <b>Анонимное сообщение</b>",
 			}, job.Markup)
+
+			if err != nil {
+				log.Println(err)
+			}
+
 			continue
 		}
 

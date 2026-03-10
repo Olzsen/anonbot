@@ -49,12 +49,18 @@ func main() {
 		Unique: "help",
 	}
 
+	btnQR := tb.InlineButton{
+		Text:   "📷 QR код",
+		Unique: "qr",
+	}
+
 	b.Handle("/start", bot.StartHandler(b.Me.Username))
 	b.Handle("/admin", bot.AdminHandler)
 	b.Handle("/setad", bot.SetAdHandler)
 
 	b.Handle(&btnStats, bot.StatsHandler)
 	b.Handle(&btnHelp, bot.HelpHandler)
+	b.Handle(&btnQR, bot.QRHandler(b.Me.Username))
 
 	b.Handle(tb.OnText, bot.TextHandler)
 	b.Handle(tb.OnPhoto, bot.PhotoHandler)
