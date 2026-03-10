@@ -71,13 +71,10 @@ func worker(bot *tb.Bot) {
 			continue
 		}
 
-		if job.Text != "" {
+		_, err := bot.Send(user, job.Text, job.Markup)
 
-			_, err := bot.Send(user, job.Text, job.Markup)
-
-			if err != nil {
-				log.Println(err)
-			}
+		if err != nil {
+			log.Println(err)
 		}
 
 		time.Sleep(200 * time.Millisecond)
