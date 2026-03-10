@@ -28,9 +28,7 @@ func StartHandler(botUsername string) func(tb.Context) error {
 		ref := repository.GetRefCode(user.ID)
 
 		if ref == "" {
-
 			ref = service.GenerateRef()
-
 			repository.SetRefCode(user.ID, ref)
 		}
 
@@ -114,7 +112,7 @@ func TextHandler(c tb.Context) error {
 	text := c.Text()
 
 	if len(text) > maxMessageLength {
-		return c.Send("❌ Сообщение слишком длинное (макс 1000 символов)")
+		return c.Send("❌ Сообщение слишком длинное")
 	}
 
 	replyID, replying := repository.GetReply(user.ID)
@@ -124,9 +122,8 @@ func TextHandler(c tb.Context) error {
 		safe := html.EscapeString(text)
 
 		msg := fmt.Sprintf(
-			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>\n\n%s",
+			"💬 <b>Ответ на анонимное сообщение</b>\n\n<blockquote><code>%s</code></blockquote>",
 			safe,
-			add,
 		)
 
 		service.Queue <- service.Job{
@@ -142,18 +139,7 @@ func TextHandler(c tb.Context) error {
 	targetID, ok := repository.GetSession(user.ID)
 
 	if !ok {
-		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
-	}
-
-	allow, wait := service.Allow(user.ID)
-
-	if !allow {
-		return c.Send(
-			fmt.Sprintf(
-				"⏳ Подождите %d секунд перед следующим сообщением",
-				wait,
-			),
-		)
+		return c.Send("Открой ссылку пользователя")
 	}
 
 	safe := html.EscapeString(text)
@@ -185,13 +171,15 @@ func TextHandler(c tb.Context) error {
 
 	repository.DeleteSession(user.ID)
 
-	return c.Send("✅ Сообщение отправлено анонимно")
+	return c.Send("✅ Сообщение отправлено")
 }
 
 func PhotoHandler(c tb.Context) error {
 
 	user := c.Sender()
 	photo := c.Message().Photo
+
+	caption := html.EscapeString(photo.Caption)
 
 	replyID, replying := repository.GetReply(user.ID)
 
@@ -200,6 +188,7 @@ func PhotoHandler(c tb.Context) error {
 		service.Queue <- service.Job{
 			UserID: replyID,
 			Photo:  photo.FileID,
+			Text:   caption,
 		}
 
 		repository.DeleteReply(user.ID)
@@ -210,7 +199,7 @@ func PhotoHandler(c tb.Context) error {
 	targetID, ok := repository.GetSession(user.ID)
 
 	if !ok {
-		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+		return c.Send("Открой ссылку пользователя")
 	}
 
 	messageID := repository.SaveMediaMessage(
@@ -231,15 +220,22 @@ func PhotoHandler(c tb.Context) error {
 		},
 	}
 
+	text := caption
+
+	if text == "" {
+		text = "📩 <b>Анонимное фото</b>"
+	}
+
 	service.Queue <- service.Job{
 		UserID: targetID,
 		Photo:  photo.FileID,
+		Text:   text,
 		Markup: markup,
 	}
 
 	repository.DeleteSession(user.ID)
 
-	return c.Send("✅ Фото отправлено анонимно")
+	return c.Send("✅ Фото отправлено")
 }
 
 func VideoHandler(c tb.Context) error {
@@ -264,7 +260,7 @@ func VideoHandler(c tb.Context) error {
 	targetID, ok := repository.GetSession(user.ID)
 
 	if !ok {
-		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+		return c.Send("Открой ссылку пользователя")
 	}
 
 	messageID := repository.SaveMediaMessage(
@@ -293,7 +289,7 @@ func VideoHandler(c tb.Context) error {
 
 	repository.DeleteSession(user.ID)
 
-	return c.Send("✅ Видео отправлено анонимно")
+	return c.Send("✅ Видео отправлено")
 }
 
 func VoiceHandler(c tb.Context) error {
@@ -318,7 +314,7 @@ func VoiceHandler(c tb.Context) error {
 	targetID, ok := repository.GetSession(user.ID)
 
 	if !ok {
-		return c.Send("Открой ссылку пользователя чтобы отправить сообщение")
+		return c.Send("Открой ссылку пользователя")
 	}
 
 	messageID := repository.SaveMediaMessage(
@@ -347,7 +343,7 @@ func VoiceHandler(c tb.Context) error {
 
 	repository.DeleteSession(user.ID)
 
-	return c.Send("✅ Голосовое отправлено анонимно")
+	return c.Send("✅ Голосовое отправлено")
 }
 
 func ReplyButton(c tb.Context) error {
@@ -369,7 +365,9 @@ func ReplyButton(c tb.Context) error {
 	senderID, ok := repository.GetMessageSender(messageID)
 
 	if !ok {
+
 		c.Respond()
+
 		return c.Send("❌ Сообщение не найдено")
 	}
 
@@ -377,7 +375,7 @@ func ReplyButton(c tb.Context) error {
 
 	c.Respond()
 
-	return c.Send("✏️ Напиши ответ на сообщение")
+	return c.Send("✏️ Напиши ответ")
 }
 
 func StatsHandler(c tb.Context) error {
@@ -390,9 +388,9 @@ func StatsHandler(c tb.Context) error {
 
 	msg := fmt.Sprintf(
 		"📊 <b>Твоя статистика</b>\n\n"+
-			"📨 Получено сообщений: <b>%d</b>\n"+
-			"📤 Отправлено сообщений: <b>%d</b>\n"+
-			"📅 Сегодня получено: <b>%d</b>\n\n%s",
+			"📨 Получено: <b>%d</b>\n"+
+			"📤 Отправлено: <b>%d</b>\n"+
+			"📅 Сегодня: <b>%d</b>\n\n%s",
 		received,
 		sent,
 		today,

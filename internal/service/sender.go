@@ -10,7 +10,6 @@ import (
 func StartSender(bot *tb.Bot) {
 
 	for i := 0; i < 5; i++ {
-
 		go worker(bot)
 	}
 }
@@ -23,10 +22,15 @@ func worker(bot *tb.Bot) {
 
 		if job.Photo != "" {
 
-			_, err := bot.Send(user, &tb.Photo{
-				File:    tb.File{FileID: job.Photo},
-				Caption: "📩 <b>Анонимное сообщение</b>",
-			}, job.Markup)
+			photo := &tb.Photo{
+				File: tb.File{FileID: job.Photo},
+			}
+
+			if job.Text != "" {
+				photo.Caption = job.Text
+			}
+
+			_, err := bot.Send(user, photo, job.Markup)
 
 			if err != nil {
 				log.Println(err)
@@ -36,20 +40,45 @@ func worker(bot *tb.Bot) {
 		}
 
 		if job.Video != "" {
-			bot.Send(user, &tb.Video{
+
+			video := &tb.Video{
 				File: tb.File{FileID: job.Video},
-			}, job.Markup)
+			}
+
+			if job.Text != "" {
+				video.Caption = job.Text
+			}
+
+			_, err := bot.Send(user, video, job.Markup)
+
+			if err != nil {
+				log.Println(err)
+			}
+
 			continue
 		}
 
 		if job.Voice != "" {
-			bot.Send(user, &tb.Voice{
+
+			_, err := bot.Send(user, &tb.Voice{
 				File: tb.File{FileID: job.Voice},
 			}, job.Markup)
+
+			if err != nil {
+				log.Println(err)
+			}
+
 			continue
 		}
 
-		bot.Send(user, job.Text, job.Markup)
+		if job.Text != "" {
+
+			_, err := bot.Send(user, job.Text, job.Markup)
+
+			if err != nil {
+				log.Println(err)
+			}
+		}
 
 		time.Sleep(200 * time.Millisecond)
 	}
