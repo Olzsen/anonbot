@@ -71,8 +71,7 @@ func main() {
 
 	service.StartCleanup()
 
-	service.Queue = make(chan service.Job, 100)
-	go service.StartSender(b)
+	service.StartSender(b)
 
 	log.Println("Bot started")
 
